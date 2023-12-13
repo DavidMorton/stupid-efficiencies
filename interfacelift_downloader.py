@@ -1,5 +1,5 @@
-desired_aspect = 16/10
-perfect_size = (2880, 1864)
+# Got lazy and got tired of selecting drop downs and clicking download
+# over and over again. It's faster to write the code to do it for me. 
 
 from lxml.html import fromstring
 import requests, re, os, time
@@ -45,7 +45,7 @@ def get_tags(id, description):
         except:
             pass
 
-def get_selected_tokens(baseurl):
+def get_selected_tokens(baseurl, size_needed):
     tree = get_tree(baseurl)
 
     results = []
@@ -54,7 +54,7 @@ def get_selected_tokens(baseurl):
         base = onload_tokens[1]
         identifier = int(onload_tokens[3])
         resolution_options = [tuple(int(_) for _ in option.attrib['value'].split('x')) for option in select.xpath('./optgroup/option')]
-        resolution = get_best_resolution(resolution_options, perfect_size)
+        resolution = get_best_resolution(resolution_options, size_needed)
         results.append((identifier, base, resolution))
     return results
 
@@ -72,10 +72,10 @@ def get_link_token():
 def get_download_link(token, file):
     return f'https://interfacelift.com/wallpaper/{token}/{file}'
 
-def download_files(baseurl, target_directory, quality=90):
+def download_files(baseurl, target_directory, size_needed, quality=90):
     files_downloaded = 0
     token = get_link_token()
-    for identifier, base, resolution in get_selected_tokens(baseurl):
+    for identifier, base, resolution in get_selected_tokens(baseurl, size_needed):
         basename = get_selected_file(identifier, base, resolution)
         target_filename = os.path.join(target_directory, basename)
         download_link = get_download_link(token, basename)
@@ -102,7 +102,7 @@ def download_files(baseurl, target_directory, quality=90):
             print('Skipping', basename, '(already exists)')
     return files_downloaded
 
-def do_downloads(target_directory, start_page=1):
+def do_downloads(target_directory, size_needed, start_page=1):
     files_downloaded = -1
     while files_downloaded != 0:
         print('Downloading page', start_page)
@@ -111,8 +111,11 @@ def do_downloads(target_directory, start_page=1):
         else:
             baseurl = f'https://interfacelift.com/wallpaper/downloads/date/any/index{start_page}.html'
     
-        files_downloaded = download_files(baseurl, target_directory)
+        files_downloaded = download_files(baseurl, target_directory, size_needed)
         start_page += 1
 
 directory = '/Users/davidmorton/Documents/Personal/Wallpapers2/'
-do_downloads(directory, start_page=1)
+
+screen_size = (2880, 1864)
+
+do_downloads(directory, size_needed=screen_size, start_page=1)
