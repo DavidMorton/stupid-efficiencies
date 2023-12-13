@@ -72,15 +72,6 @@ def get_link_token():
 def get_download_link(token, file):
     return f'https://interfacelift.com/wallpaper/{token}/{file}'
 
-def get_tags(id, description):
-    response = requests.get(f'https://interfacelift.com/wallpaper/details/{id}/{description}.html')
-    if response.status_code == 200:
-        content = response.content.decode('latin-1')
-
-    tree = fromstring(content)
-    tags = [x.text.split('\xa0')[0] for x in tree.xpath('//*/div[@class="jeder"]/div/p/a')]
-    return tags
-
 def download_files(baseurl, target_directory, quality=90):
     files_downloaded = 0
     token = get_link_token()
@@ -89,27 +80,23 @@ def download_files(baseurl, target_directory, quality=90):
         target_filename = os.path.join(target_directory, basename)
         download_link = get_download_link(token, basename)
         os.makedirs(target_directory, exist_ok=True)
-        if True:# os.path.exists(target_filename):
+        if not os.path.exists(target_filename):
             print('Downloading', basename)
-            attempts = 0
             time.sleep(0.5)
-            while attempts < 5:
+            for i in range(0, 5):
                 try:
                     response = requests.get(download_link)
                     with open(target_filename, "wb") as f:
                         f.write(response.content)
                     image = Image.open(target_filename)
                     image.save(target_filename, quality=quality)
-                    tags = get_tags(identifier, base)
-                    
-                    attempts = 10
                     files_downloaded += 1
+                    break
                 except:
                     print("OOPS! Trying to download again...")
                     if os.path.exists(target_filename):
                         os.remove(target_filename)
-                    attempts += 1
-                    if attempts == 5:
+                    if i == 5:
                         print('ERROR! COULD NOT DOWNLOAD FILE. STATUS CODE WAS', response.status_code)
         else:
             print('Skipping', basename, '(already exists)')
