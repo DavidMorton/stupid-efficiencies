@@ -1,0 +1,12 @@
+name: stupid-efficiencies
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pandas==2.1.2
+  - pyarrow
+  - ipykernel
+  - requests
+  - pip:
+    - lxml
+    - pillow
